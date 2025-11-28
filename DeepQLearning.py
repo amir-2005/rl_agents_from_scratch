@@ -218,9 +218,9 @@ class DQL:
                 env.render()
                 
                 if done or truncated:
-                    env.close()
                     break
             
             total_rewards.append(sum_rewards)
             
+        env.close()
         return total_rewards
