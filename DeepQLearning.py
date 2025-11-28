@@ -8,6 +8,12 @@ from collections import deque
 
 
 class DQL:
+    """
+    Deep Q-Learning (DQL) agent for discrete action-space environments.
+
+    Implements a Deep Q-Network with experience replay, target network, and 
+    epsilon-greedy exploration.
+    """        
     def __init__(
         self,
         env,
@@ -21,7 +27,32 @@ class DQL:
         buffer_size=10000,
         batch_size=64,
     ) -> None:
-        
+        """
+        Initialize the DQL agent.
+
+        Parameters
+        ----------
+        env : gym.Env
+            Environment for the agent.
+        hidden_layers : tuple of int
+            Sizes of hidden layers in the Q-network.
+        activation : str
+            Activation function for hidden layers ("ReLU" or "Tanh").
+        learning_rate : float
+            Learning rate for the optimizer.
+        discount_factor : float
+            Discount factor for future rewards (gamma).
+        epsilon_start : float
+            Initial exploration rate.
+        epsilon_min : float
+            Minimum exploration rate.
+        epsilon_decay : float
+            Decay factor for epsilon after each step.
+        buffer_size : int
+            Maximum size of the replay buffer.
+        batch_size : int
+            Mini-batch size for training.
+        """
         if activation not in ["ReLU", "Tanh"]:
             raise ValueError("activation must be Tanh or ReLU")
         
@@ -57,6 +88,19 @@ class DQL:
         self.steps = 0
         
     def _select_action(self, state):
+        """
+        Select an action using epsilon-greedy policy.
+
+        Parameters
+        ----------
+        state : np.ndarray
+            Current state of the environment.
+
+        Returns
+        -------
+        int
+            Action index.
+        """
         if np.random.rand() < self.epsilon:
             return self.env.action_space.sample()
         
@@ -66,6 +110,9 @@ class DQL:
         return np.argmax(q_values.cpu().numpy())
 
     def _update(self):
+        """
+        Update the Q-network using a mini-batch from the replay buffer.
+        """
         if len(self.memory) < self.batch_size:
             return
 
@@ -92,6 +139,23 @@ class DQL:
             self.epsilon *= self.epsilon_decay
 
     def train(self, n_episodes=1000, target_update=1000, render=False):
+        """
+        Train the agent in the environment.
+
+        Parameters
+        ----------
+        n_episodes : int
+            Number of training episodes.
+        target_update : int
+            Steps interval to update the target network.
+        render : bool
+            Whether to render the environment during training.
+
+        Returns
+        -------
+        list
+            Total rewards per episode.
+        """
         rewards = []
         for _ in tqdm(range(n_episodes)):
             state, _ = self.env.reset()
@@ -121,7 +185,21 @@ class DQL:
         return rewards
     
     def test(self, env, n_episodes = 10):
+        """
+        Test the trained agent without updating weights.
 
+        Parameters
+        ----------
+        env : gym.Env
+            Environment to test the agent.
+        n_episodes : int
+            Number of test episodes.
+
+        Returns
+        -------
+        list
+            Total rewards per episode.
+        """
         total_rewards = []
         
         for _ in range(n_episodes):
